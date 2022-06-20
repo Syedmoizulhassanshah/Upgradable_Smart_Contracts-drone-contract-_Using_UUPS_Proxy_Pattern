@@ -7,7 +7,8 @@
 1. Clone the repository.
 2. Install the dependencies using the following command: `npm i`.
 3. Create a `.env` file in the project folder and add your `PRIVATEKEY`,`infuraID` **(RINKEBY_RPC_URL)** and `etherscan-API-key` in it in the following format:
-   ``` 
+   
+  ``` 
   RINKEBY_RPC_URL='https://rinkeby.infura.io/v3/1d88d32449d64d7a94c6b55de216042e'
   PRIVATE_KEY=''
   ETHERSCAN_API_KEY= '8WKUUZ72WVPJ78UBI4TMHWT61UVA5FYI53'
