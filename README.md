@@ -1,1 +1,21 @@
 # Upgradable_Smart_Contracts(drone-contract)_Using_UUPS_Proxy_Pattern
+
+**Note:** The instructions given below are for Ubuntu 20.04 LTS (users only).
+
+## Steps to run the project
+
+1. Clone the repository.
+2. Install the dependencies using the following command: `npm i`.
+3. Create a `.env` file in the project folder and add your `PRIVATEKEY`,`infuraID` **(RINKEBY_RPC_URL)** and `etherscan-API-key` in it.
+4. Run the deployment script **deploy_UUPS.js**  present in the scripts folder, using the following command:  
+   `npx hardhat run --network rinkeby scripts/deploy_UUPS.js` to deploy the **Drone_Contract_UUPS**.
+5. Now verify the deployed **Drone_Contract_UUPS** on rinkeby testnet using the following command: 
+   `npx hardhat verify --network rinkeby {implementation  contract-address of Drone_Contract_UUPS}`
+6. Once the **Drone_Contract_UUPS** is deployed and verified on rinkeby testnet, we now need to deploy the upgraded implementation of Drone-Contract that
+   is **Drone_ContractV2_UUPS** by running the deployment script **upgrade_UUPS.js** present in the scripts folder, using the following command:
+   `npx hardhat run --network rinkeby scripts/upgrade_UUPS.js` to deploy the **Drone_ContractV2_UUPS**.
+7. Now verify the deployed  **Drone_Contract_UUPS** on rinkeby testnet using the following command:
+   `npx hardhat verify --network rinkeby {implementation  contract-address of Drone_ContractV2_UUPS}`
+8. Once verified, your Etherscan transactions will look like this:
+
+    ![Etherscan deployment](https://user-images.githubusercontent.com/52605353/174560518-1739fe01-5a13-48a6-a3f0-a17f0040ac59.png)
