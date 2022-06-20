@@ -25,8 +25,15 @@
      
    ![Contract Tab](https://user-images.githubusercontent.com/52605353/174563888-1fef79b8-cefe-4f58-bde1-cc85ef9526e9.png)
   
-   Choose “Is this a proxy?” option from the dropdown and then Verify.
+   Choose **“Is this a proxy?”** option from the dropdown and then **Verify.**
 
-   ![pic 3](https://user-images.githubusercontent.com/52605353/174564215-24b2abef-925c-42da-a0a8-bca0ae0dcb64.png)
+   ![Is this a proxy?](https://user-images.githubusercontent.com/52605353/174564215-24b2abef-925c-42da-a0a8-bca0ae0dcb64.png)
+
+    You can see **Read as Proxy** and **Write as Proxy** options in the `Contract` tab of the proxy contract.
+    
+   ![pic 4](https://user-images.githubusercontent.com/52605353/174565105-465a1bfa-905e-4b79-ad19-a24a624e40ae.png)
+
+   Now you can interact with the **Drone_Contract_UUPS** and **Drone_ContractV2_UUPS** contracts  using those options!
+
 
    
