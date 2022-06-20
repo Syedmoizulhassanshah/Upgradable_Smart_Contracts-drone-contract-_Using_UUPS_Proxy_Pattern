@@ -11,12 +11,13 @@
    `npx hardhat run --network rinkeby scripts/deploy_UUPS.js` to deploy the **Drone_Contract_UUPS**.
 5. Now verify the deployed **Drone_Contract_UUPS** on rinkeby testnet using the following command: 
    `npx hardhat verify --network rinkeby {implementation  contract-address of Drone_Contract_UUPS}`
-6. Once the **Drone_Contract_UUPS** is deployed and verified on rinkeby testnet, we now need to deploy the upgraded implementation of Drone-Contract that
-   is **Drone_ContractV2_UUPS** by running the deployment script **upgrade_UUPS.js** present in the scripts folder, using the following command:
+6. We now change proxyAddress in **upgrade_UUPS.js** with the new **DroneContractProxy address** present in the `const proxyAddress = '0x1397cbC428E0Bfc599eFB31640F909C12144CDB5';`
+7. Once the **Drone_Contract_UUPS** is deployed and verified on rinkeby testnet, we now need to deploy the upgraded implementation of Drone-Contract that
+   is **Drone_ContractV2_UUPS** by running the deployment script **upgrade_UUPS.js** present in the scripts folder , using the following command:
    `npx hardhat run --network rinkeby scripts/upgrade_UUPS.js` to deploy the **Drone_ContractV2_UUPS**.
-7. Now verify the deployed  **Drone_Contract_UUPS** on rinkeby testnet using the following command:
+8. Now verify the deployed  **Drone_Contract_UUPS** on rinkeby testnet using the following command:
    `npx hardhat verify --network rinkeby {implementation  contract-address of Drone_ContractV2_UUPS}`
-8. Once verified, your Etherscan transactions will look like this:
+9. Once verified, your Etherscan transactions will look like this:
     ![Etherscan deployment](https://user-images.githubusercontent.com/52605353/174560518-1739fe01-5a13-48a6-a3f0-a17f0040ac59.png)
    
    In the proxy pattern, everything is stored and executed in the context of the proxy contract.So in-order to interact with the **Drone_Contract_UUPS**,
