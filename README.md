@@ -17,5 +17,16 @@
 7. Now verify the deployed  **Drone_Contract_UUPS** on rinkeby testnet using the following command:
    `npx hardhat verify --network rinkeby {implementation  contract-address of Drone_ContractV2_UUPS}`
 8. Once verified, your Etherscan transactions will look like this:
-
     ![Etherscan deployment](https://user-images.githubusercontent.com/52605353/174560518-1739fe01-5a13-48a6-a3f0-a17f0040ac59.png)
+   
+   In the proxy pattern, everything is stored and executed in the context of the proxy contract.So in-order to interact with the **Drone_Contract_UUPS**,
+   you should do it via the proxy contract. To do that, first we need to inform Etherscan that the deployed contract is actually a proxy.
+   In the `Contract` tab of the proxy contract, there’ll be a small dropdown above the source code section (on the right side).
+     
+   ![Contract Tab](https://user-images.githubusercontent.com/52605353/174563888-1fef79b8-cefe-4f58-bde1-cc85ef9526e9.png)
+  
+   Choose “Is this a proxy?” option from the dropdown and then Verify.
+
+   ![pic 3](https://user-images.githubusercontent.com/52605353/174564215-24b2abef-925c-42da-a0a8-bca0ae0dcb64.png)
+
+   
