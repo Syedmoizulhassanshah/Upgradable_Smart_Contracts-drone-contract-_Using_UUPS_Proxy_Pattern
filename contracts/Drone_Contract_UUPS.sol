@@ -1,45 +1,42 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.14;
+pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-// import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-// import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-// import "@openzeppelin/contracts/access/Ownable.sol";
-// import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
-contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable , UUPSUpgradeable
+contract DroneContract is
+    Initializable,
+    ERC721EnumerableUpgradeable,
+    OwnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    UUPSUpgradeable
 {
-
-    uint public droneId;
-    uint public mintSupplyLimit;
+    uint256 public droneId;
+    uint256 public mintSupplyLimit;
     bool public mintEnabled;
     string public baseUri;
     uint256 private value; // added in upgrade
 
-    struct Drones{
+    struct Drones {
         uint256 price;
         address ownerAddress;
         bool listedOnSale;
         string metadataHash;
     }
 
-    struct ReturnDroneInfo{
+    struct ReturnDroneInfo {
         uint256 droneID;
         string metadataHash;
     }
-    
-    mapping(uint256 => Drones) public drones;
-    mapping (address => bool) public whitelistedAdminAddresses;
 
-    error PriceNotMatched(
-        uint256 droneId, 
-        uint256 price
-    );
+    mapping(uint256 => Drones) public drones;
+    mapping(address => bool) public whitelistedAdminAddresses;
+
+    error PriceNotMatched(uint256 droneId, uint256 price);
     error PriceMustBeAboveZero();
     error NotOwnerOfDrone();
     error InvalidMetadataHash();
@@ -51,7 +48,10 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
     error OwnerCannotBuyHisOwnDrone();
     error OwnerTransferredTokenExternally();
     error PlayerHoldZeroDrone();
-    error NewLimitShouldBeGreaterThanExisting(uint256 existingLimit, uint256 newLimit);
+    error NewLimitShouldBeGreaterThanExisting(
+        uint256 existingLimit,
+        uint256 newLimit
+    );
 
     event UpdatedDroneStatusForSale(
         uint256 droneId,
@@ -59,16 +59,9 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
         uint256 price
     );
 
-    event UpdatedDroneStatusToNotForSale(
-        uint256 droneId,
-        address ownerAddress
-    );
+    event UpdatedDroneStatusToNotForSale(uint256 droneId, address ownerAddress);
 
-    event DroneBought(
-        uint256 droneId,
-        address buyer,
-        uint256 price
-    );  
+    event DroneBought(uint256 droneId, address buyer, uint256 price);
 
     event UpdatedDronePrice(
         uint256 droneId,
@@ -76,63 +69,42 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
         uint256 price
     );
 
-    event AddedWhitelistAdmin(
-        address whitelistedAddress,
-        address updatedBy
-    );
+    event AddedWhitelistAdmin(address whitelistedAddress, address updatedBy);
 
-    event RemovedWhitelistAdmin(
-        address whitelistedAddress,
-        address updatedBy
-    );
+    event RemovedWhitelistAdmin(address whitelistedAddress, address updatedBy);
 
-    event SetBaseURI(
-        string baseURI,
-        address addedBy
-    );
+    event SetBaseURI(string baseURI, address addedBy);
 
-    event UpdateMetadata(
-        uint droneId,
-        string newHash,
-        address updatedBy
-    );
+    event UpdateMetadata(uint256 droneId, string newHash, address updatedBy);
 
-    event MintStatusUpdated(
-        bool status,
-        address updatedBy
-    );
+    event MintStatusUpdated(bool status, address updatedBy);
 
     event DroneMinted(
-        uint droneId,
+        uint256 droneId,
         address ownerAddress,
         string metadataHash
     );
 
     event DroneRevertedFromSale(
-        uint droneId,
+        uint256 droneId,
         address lastOwnerAddress,
         address newOwnerAddress,
         bool saleStatus
     );
 
-    event MintLimitUpdated(
-        uint256 newLimit,
-        address updatedBy
-    );
+    event MintLimitUpdated(uint256 newLimit, address updatedBy);
 
+    function initialize(uint256 _mintSupplyLimit) public initializer {
+        __ERC721_init("Drones", "TB2");
+        __Ownable_init();
+        __UUPSUpgradeable_init();
 
+        mintSupplyLimit = _mintSupplyLimit;
+        mintEnabled = true;
+        baseUri = "https://gateway.pinata.cloud/ipfs/";
 
-    function initialize(uint _mintSupplyLimit) initializer public {
-       __ERC721_init("Drones", "TB2");
-       __Ownable_init();
-      __UUPSUpgradeable_init();
-       
-       mintSupplyLimit = _mintSupplyLimit;
-       mintEnabled = true;
-      baseUri = "https://gateway.pinata.cloud/ipfs/";
-
-         emit SetBaseURI(baseUri, msg.sender);
-     }
+        emit SetBaseURI(baseUri, msg.sender);
+    }
 
     // constructor(uint _mintSupplyLimit) ERC721("Drones", "TB2") {
     //     mintSupplyLimit = _mintSupplyLimit;
@@ -142,13 +114,13 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
     //     emit SetBaseURI(baseUri, msg.sender);
     // }
 
-    modifier droneExists(uint _droneId) {
+    modifier droneExists(uint256 _droneId) {
         require(_exists(_droneId), "This drone does not exist.");
-    _;
+        _;
     }
 
     modifier isListedForSale(uint256 _droneId) {
-        require (drones[_droneId].listedOnSale ,"This drone is not listed yet");
+        require(drones[_droneId].listedOnSale, "This drone is not listed yet");
         _;
     }
 
@@ -181,16 +153,16 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * @return string .
      */
 
-    function tokenURI(uint _tokenId) 
-    override
-    public 
-    view 
-    returns (string memory) 
+    function tokenURI(uint256 _tokenId)
+        public
+        view
+        override
+        returns (string memory)
     {
         if (!_exists(_tokenId)) {
             revert DroneNotExist();
         }
-        return string(abi.encodePacked(baseUri, drones[_tokenId].metadataHash));      
+        return string(abi.encodePacked(baseUri, drones[_tokenId].metadataHash));
     }
 
     /**
@@ -202,10 +174,9 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * Emits a {UpdatedBaseURI} event.
      */
 
-    function setBaseUri(string memory _baseUri) 
-    external onlyOwner {
+    function setBaseUri(string memory _baseUri) external onlyOwner {
         baseUri = _baseUri;
-        
+
         emit SetBaseURI(baseUri, msg.sender);
     }
 
@@ -219,15 +190,12 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * Emits a {UpdateMetadata} event.
      */
     function updateMetadataHash(
-        uint _droneId, 
-        string calldata _droneMetadataHash) 
-        droneExists(_droneId) 
-        onlyOwner
-        external {
-
+        uint256 _droneId,
+        string calldata _droneMetadataHash
+    ) external droneExists(_droneId) onlyOwner {
         drones[_droneId].metadataHash = _droneMetadataHash;
 
-        emit UpdateMetadata(_droneId,_droneMetadataHash,msg.sender);
+        emit UpdateMetadata(_droneId, _droneMetadataHash, msg.sender);
     }
 
     /**
@@ -237,15 +205,13 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
 
      * @param _status - status of drone Id 
      */
-    
-    function updateMintStatus(bool _status) 
-    external 
-    onlyOwner {
+
+    function updateMintStatus(bool _status) external onlyOwner {
         mintEnabled = _status;
 
         emit MintStatusUpdated(_status, msg.sender);
     }
-    
+
     /**
      * @dev updateMintLimit is used to update minting limit.
      * Requirement:
@@ -253,12 +219,13 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
 
      * @param newLimit - new Limit of minting 
      */
-    
-    function updateMintLimit(uint256 newLimit) 
-    external 
-    onlyOwner {
-        if(newLimit <= mintSupplyLimit) 
-            revert NewLimitShouldBeGreaterThanExisting(mintSupplyLimit, newLimit);
+
+    function updateMintLimit(uint256 newLimit) external onlyOwner {
+        if (newLimit <= mintSupplyLimit)
+            revert NewLimitShouldBeGreaterThanExisting(
+                mintSupplyLimit,
+                newLimit
+            );
 
         mintSupplyLimit = newLimit;
 
@@ -274,9 +241,14 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
         uint256 tokenId
     ) public virtual override(ERC721Upgradeable, IERC721Upgradeable) {
         //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "ERC721: caller is not token owner nor approved"
+        );
 
-        if(drones[tokenId].listedOnSale && from == drones[tokenId].ownerAddress) {
+        if (
+            drones[tokenId].listedOnSale && from == drones[tokenId].ownerAddress
+        ) {
             drones[tokenId].listedOnSale = false;
             drones[tokenId].ownerAddress = to;
         } else {
@@ -296,9 +268,14 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
         uint256 tokenId,
         bytes memory data
     ) public virtual override(ERC721Upgradeable, IERC721Upgradeable) {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner nor approved");
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "ERC721: caller is not token owner nor approved"
+        );
 
-        if(drones[tokenId].listedOnSale && from == drones[tokenId].ownerAddress) {
+        if (
+            drones[tokenId].listedOnSale && from == drones[tokenId].ownerAddress
+        ) {
             drones[tokenId].listedOnSale = false;
             drones[tokenId].ownerAddress = to;
         } else {
@@ -315,11 +292,11 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * @param _droneMetadataHash - drone metadata 
      */
 
-    function mintDrone(string memory _droneMetadataHash) 
-    external 
-    nonReentrant
-    onlyWhitelistedAddress {
-
+    function mintDrone(string memory _droneMetadataHash)
+        external
+        nonReentrant
+        onlyWhitelistedAddress
+    {
         droneId++;
         if (bytes(_droneMetadataHash).length != 46) {
             revert InvalidMetadataHash();
@@ -344,20 +321,18 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * Requirement:
      * - This function can only called by owner of the drone
      *
-     * @param _droneId - drone Id 
+     * @param _droneId - drone Id
      * @param _price - Price of the drone
      * Emits a {UpdatedDroneStatusForSale} event when player address is new.
      */
 
-    function updateDroneToSale(
-        uint256 _droneId,
-        uint256 _price) 
+    function updateDroneToSale(uint256 _droneId, uint256 _price)
         external
-        onlyOwnerOfDrone(_droneId) 
+        onlyOwnerOfDrone(_droneId)
     {
         if (_price <= 0) {
             revert PriceMustBeAboveZero();
-        }        
+        }
         drones[_droneId].listedOnSale = true;
         drones[_droneId].price = _price;
 
@@ -373,9 +348,9 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      */
 
     function getDroneInfo(uint256 _droneId)
-    external 
-    view 
-    returns (Drones memory)
+        external
+        view
+        returns (Drones memory)
     {
         return drones[_droneId];
     }
@@ -385,14 +360,14 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * Requirement:
      * - This function can only called by owner of the drone
      *
-     * @param _droneId - drone Id 
+     * @param _droneId - drone Id
      * Emits a {UpdatedDroneStatusToNotForSale} event when player address is new.
      */
 
-    function updateDroneStatusToNotForSale(uint256 _droneId) 
-    external
-    isListedForSale(_droneId)
-    onlyOwnerOfDrone(_droneId)
+    function updateDroneStatusToNotForSale(uint256 _droneId)
+        external
+        isListedForSale(_droneId)
+        onlyOwnerOfDrone(_droneId)
     {
         drones[_droneId].listedOnSale = false;
 
@@ -404,17 +379,17 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * Requirement:
      * - This function can only called by anyone who wants to purchase drone
      *
-     * @param _droneId - drone Id 
+     * @param _droneId - drone Id
      * Emits a {DroneBought} event when player address is new.
      */
 
-    function buyDrone(uint256 _droneId)  
-    payable 
-    external
-    isListedForSale(_droneId)    
-    notOwnerOfDrone(_droneId)  
+    function buyDrone(uint256 _droneId)
+        external
+        payable
+        isListedForSale(_droneId)
+        notOwnerOfDrone(_droneId)
     {
-        if(drones[_droneId].ownerAddress != ownerOf(_droneId)){
+        if (drones[_droneId].ownerAddress != ownerOf(_droneId)) {
             revert OwnerTransferredTokenExternally();
         }
         if (msg.value != drones[_droneId].price) {
@@ -439,18 +414,15 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * Emits a {UpdatedDronePrice} event when player address is new.
      */
 
-    function updateDronePrice(
-        uint256 _droneId,
-        uint256 _newPrice
-        ) 
-    external
-    isListedForSale( _droneId)
-    onlyOwnerOfDrone(_droneId)
-    nonReentrant
+    function updateDronePrice(uint256 _droneId, uint256 _newPrice)
+        external
+        isListedForSale(_droneId)
+        onlyOwnerOfDrone(_droneId)
+        nonReentrant
     {
         if (_newPrice <= 0) {
             revert PriceMustBeAboveZero();
-        }        
+        }
         drones[_droneId].price = _newPrice;
 
         emit UpdatedDronePrice(_droneId, msg.sender, _newPrice);
@@ -465,11 +437,9 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * Emits a {AddedWhitelistAdmin} event when player address is new.
      */
 
-    function addWhitelistAddress(address _account) 
-    external 
-    onlyOwner {
+    function addWhitelistAddress(address _account) external onlyOwner {
         whitelistedAdminAddresses[_account] = true;
-        emit AddedWhitelistAdmin(_account, msg.sender);     
+        emit AddedWhitelistAdmin(_account, msg.sender);
     }
 
     /**
@@ -481,9 +451,7 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
      * Emits a {RemovedWhitelistAdmin} event when player address is new.
      */
 
-    function removeWhitelistAdmin(address _account) 
-    external 
-    onlyOwner {
+    function removeWhitelistAdmin(address _account) external onlyOwner {
         whitelistedAdminAddresses[_account] = false;
         emit RemovedWhitelistAdmin(_account, msg.sender);
     }
@@ -491,67 +459,62 @@ contract DroneContract is ERC721EnumerableUpgradeable, OwnableUpgradeable, Reent
     /**
      * @dev getAllDrones is used to get information of all drones.
      */
- 
-    function getAllDrones() 
-    external
-    view 
-    returns(Drones[] memory){
+
+    function getAllDrones() external view returns (Drones[] memory) {
         Drones[] memory dronesList = new Drones[](totalSupply());
 
-        for (uint i = 1; i <= totalSupply(); i++){
-            dronesList[i-1] = drones[i];
+        for (uint256 i = 1; i <= totalSupply(); i++) {
+            dronesList[i - 1] = drones[i];
         }
 
-    return dronesList;
+        return dronesList;
     }
 
     /**
      * @dev getDronesByAddress is used to get information of all drones.
      */
- 
-    function getDronesByAddress(address playerAddress) 
-    external 
-    view 
-    returns(ReturnDroneInfo[] memory){
 
-        ReturnDroneInfo [] memory droneInfo = new ReturnDroneInfo[](balanceOf(playerAddress));
+    function getDronesByAddress(address playerAddress)
+        external
+        view
+        returns (ReturnDroneInfo[] memory)
+    {
+        ReturnDroneInfo[] memory droneInfo = new ReturnDroneInfo[](
+            balanceOf(playerAddress)
+        );
 
-        if(balanceOf(playerAddress) == 0)
-            return droneInfo;
+        if (balanceOf(playerAddress) == 0) return droneInfo;
 
         uint256 droneIndex = 0;
 
-        for (uint i = 1; i <= totalSupply(); i++){
-            if(ownerOf(i) == playerAddress){
+        for (uint256 i = 1; i <= totalSupply(); i++) {
+            if (ownerOf(i) == playerAddress) {
                 droneInfo[droneIndex].droneID = i;
-                droneInfo[droneIndex].metadataHash = string(abi.encodePacked(baseUri, drones[i].metadataHash));
+                droneInfo[droneIndex].metadataHash = string(
+                    abi.encodePacked(baseUri, drones[i].metadataHash)
+                );
                 droneIndex++;
             }
         }
-    return droneInfo;
+        return droneInfo;
     }
-  
-  //// added in upgrade
 
-     // Emitted when the stored value changes
+    //// added in upgrade
+
+    // Emitted when the stored value changes
     event ValueChanged(uint256 newValue);
- 
+
     // Stores a new value in the contract
-    function store(uint256 newValue) public {
+    function store_value_UUPSV1(uint256 newValue) public {
         value = newValue;
         emit ValueChanged(newValue);
     }
- 
+
     // Reads the last stored value
-    function retrieve() public view returns (uint256) {
+    function retrieve_value_UUPSV1() public view returns (uint256) {
         return value;
     }
 
-
     ///@dev required by the OZ UUPS module
-     function _authorizeUpgrade(address) internal override onlyOwner {}
-
-
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 }
-
-//0x3ab894Bd232477CD3b50B8BE9a4cEB1FBEB83973
